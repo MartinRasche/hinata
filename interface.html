@@ -100,7 +100,7 @@ IP Address:
 <h4><b>Servo 1</b></h4>
  <div class="slider_value">
   <span id="bullet_sr1" class="rs-label">0</span>
-  <input id="input_sr1" class="rs-range" type="range" min="0" max="180" value="90" onmouseup="servo(this.value, 'sr1')" oninput="showSliderValue('sr1')">
+  <input id="input_sr1" class="rs-range" type="range" min="0" max="180" value="90" onmouseup="sendCmd('sr1', this.value)" oninput="showSliderValue('sr1')">
  </div>
  <div class="box-minmax">
   <span>0</span><span>180</span>
@@ -110,19 +110,21 @@ IP Address:
 <h4><b>Servo 2</b></h4>
  <div class="slider_value">
   <span id="bullet_sr2" class="rs-label">0</span>
-  <input id="input_sr2" class="rs-range" type="range" min="0" max="180" value="90" onmouseup="servo(this.value, 'sr2')" oninput="showSliderValue('sr2')">
+  <input id="input_sr2" class="rs-range" type="range" min="0" max="180" value="90" onmouseup="sendCmd('sr2', this.value)" oninput="showSliderValue('sr2')">
  </div>
  <div class="box-minmax">
   <span>0</span><span>180</span>
  </div>
 </div>
+<div class="container" id="gamepadPrompt"></div>
+<div class="container" id="gamepadDisplay"></div>
 </div>
 <script>
 $.ajaxSetup({timeout:500});
-function servo(angle, cmd){	
+function sendCmd(cmd, value){	
 	TextVar = form.inputbox_IP.value;
 	ArduinoVar = "http://" + TextVar + ":80";
-	$.get( ArduinoVar, cmd+"="+angle)	;
+	$.get( ArduinoVar, cmd+"="+value)	;
 	{Connection: close};
 }
 function showSliderValue(cmd) {
@@ -140,5 +142,76 @@ function setSliderValue(angle, cmd) {
 }
 $(setSliderValue("90", 'sr1'));
 $(setSliderValue("90", 'sr2'));
+
+var hasGP = false;
+var repGP;
+
+function canGame() {
+	return "getGamepads" in navigator;
+}
+
+function reportOnGamepad() {
+	var gp = navigator.getGamepads()[0];
+	var html = "";
+		html += "id: "+gp.id+"<br/>";
+
+	for(var i=0;i<gp.buttons.length;i++) {
+	    
+		html+= "Button "+(i+1)+": ";
+		if(gp.buttons[i].pressed){
+			sendCmd('btn', i+1);
+			html+= " pressed";
+		} 
+		html+= "<br/>";
+	}
+
+	for(var i=0;i<gp.axes.length; i+=2) {
+		html+= "Stick "+(Math.ceil(i/2)+1)+": "+gp.axes[i]+","+gp.axes[i+1]+"<br/>";
+		if (i == 0){
+			if( gp.axes[1] < -0.85){
+				sendCmd('dir', 'fwd');
+			}else if( gp.axes[1] > 0.85){
+				sendCmd('dir', 'bck');
+			}else if( gp.axes[0] > 0.85){
+				sendCmd('dir', 'lft');
+			}else if( gp.axes[0] < -0.85){
+				sendCmd('dir', 'rgt');
+			}else{
+				sendCmd('dir', 'stp');
+			}
+		}
+	}
+
+	$("#gamepadDisplay").html(html);
+} 
+
+$(document).ready(function() {	 
+	if(canGame()) {
+		var prompt = "To begin using your gamepad, connect it and press any button!";
+		$("#gamepadPrompt").text(prompt);
+		$(window).on("gamepadconnected", function() {
+			hasGP = true;
+			$("#gamepadPrompt").html("Gamepad connected!");
+			console.log("connection event");
+			repGP = window.setInterval(reportOnGamepad,100);
+		});
+
+		$(window).on("gamepaddisconnected", function() {
+			console.log("disconnection event");
+			$("#gamepadPrompt").text(prompt);
+			window.clearInterval(repGP);
+		});
+
+		//setup an interval for Chrome
+		var checkGP = window.setInterval(function() {
+			console.log('checkGP');
+			if(navigator.getGamepads()[0]) {
+				if(!hasGP) $(window).trigger("gamepadconnected");
+				window.clearInterval(checkGP);
+			}
+		}, 500);
+	}
+});
+
 </script>
 </body></html>

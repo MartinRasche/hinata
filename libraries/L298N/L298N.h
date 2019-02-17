@@ -20,7 +20,9 @@ class L298N {
      
   public:
     L298N();
-	void enable(int(*pins)[6]);
+	void enable(int(*pins)[7]);
+	void enable();
+	void disable();
     void setLeftMotor(bool enable, bool direction, int speed);	
     void setRightMotor(bool enable, bool direction, int speed);
   private:
@@ -31,5 +33,6 @@ class L298N {
 	int _IN4;
 	int _ENA;
 	int _ENB;  
+	int _PWR; 
 };
 #endif

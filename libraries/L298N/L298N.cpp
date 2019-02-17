@@ -8,20 +8,36 @@ L298N::L298N(){
 	_enabled = false;
 }
 
-void L298N::enable(int (*pins)[6]){	
+void L298N::enable(int (*pins)[7]){	
 	_IN1 = (*pins)[0];
 	_IN2 = (*pins)[1];
 	_IN3 = (*pins)[2];
 	_IN4 = (*pins)[3];
 	_ENA = (*pins)[4];
 	_ENB = (*pins)[5];  
+	_PWR = (*pins)[6]; 
 	pinMode(_IN1, OUTPUT);
 	pinMode(_IN2, OUTPUT);
 	pinMode(_IN3, OUTPUT);
 	pinMode(_IN4, OUTPUT);
 	pinMode(_ENA, OUTPUT);
 	pinMode(_ENB, OUTPUT);
+	pinMode(_PWR, OUTPUT);
+	digitalWrite(_PWR, HIGH); 
 	_enabled = true;
+}
+
+void L298N::enable(){	
+    if(!_enabled){
+		digitalWrite(_PWR, HIGH); 
+		_enabled = true;
+	}
+}
+void L298N::disable(){	
+	if(_enabled){
+		digitalWrite(_PWR, LOW); 
+		_enabled = false;
+	}
 }
 
 void L298N::setLeftMotor(bool enable, bool direction, int speed){ 

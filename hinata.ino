@@ -33,12 +33,13 @@
 // https://www.arduino.cc/en/Hacking/PinMapping2560
 
 #define ENA                 5   // PWM Motor controls
-#define ENB                 6   // PWM Motor controls
-#define IN1                 4   // Motor 1
-#define IN2                 7   // Motor 1
-#define IN3                 8   // Motor 2
-#define IN4                 9   // Motor 2
-int L298Npins[6] = {IN1, IN2, IN3, IN4, ENA, ENB};
+#define ENB                 4   // PWM Motor controls
+#define PWR_L298           33  // enable motor controller
+#define IN1                 34   // Motor 1
+#define IN2                 35   // Motor 1
+#define IN3                 36   // Motor 2
+#define IN4                 37   // Motor 2
+int L298Npins[7] = {IN1, IN2, IN3, IN4, ENA, ENB, PWR_L298};
 // on the Mega LED_BUILTIN is PIN D13 
 #define OLED_RESET 20 
 #define PIN_AXISARM_ROTATE    45   // Servo 1 - 84 deg mid
@@ -121,7 +122,7 @@ void TankDrive_Drive_Callback() {
     drive.enable(&L298Npins);
   }else{    
     drive.setDirection(memory.getDriveDirection());
-    if(memory.comms.COMMS_WEB_CYCLE_SINCE_MSG > 20){
+    if(memory.comms.COMMS_WEB_CYCLE_SINCE_MSG > 50){
       tTankDrive_Drive.set(TASK_IMMEDIATE, TASK_FOREVER, &TankDrive_Stop_Callback);
       tTankDrive_Drive.delay(200);
     }
@@ -131,8 +132,8 @@ void TankDrive_Stop_Callback() {
   if (!drive._enabled){
     drive.enable(&L298Npins);
   }else{      
-    drive.stop();
-    tTankDrive_Drive.set(20, TASK_FOREVER, &TankDrive_Drive_Callback);
+    drive.disable();
+    tTankDrive_Drive.set(80, TASK_FOREVER, &TankDrive_Drive_Callback);
   }
 }
 
@@ -176,7 +177,7 @@ void Measure_Sensor_Voltage_Callback() {
 
 void Measure_Sensor_Voltage_Callback_2() {  
   // voltage multiplied by 11 when using voltage divider that divides by 11  ->  11.13 is calibrated
-  memory.setSensorVoltage( ( ((float)sample_sum / (float) NUM_VOLTAGE_SAMPLES * 5.1) / 1024.0 ) * 11.13 );
+  memory.setSensorVoltage( ( ((float)sample_sum / (float) NUM_VOLTAGE_SAMPLES * 5.1) / 1024.0 ) * 11.129 );
   sample_sum = 0;
   sample_count = 0;
   tMeasure_Sensor_Voltage.set(9000, TASK_FOREVER, &Measure_Sensor_Voltage_Callback);

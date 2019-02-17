@@ -19,7 +19,7 @@
  
 #include <Comms.h>
 
-#define _DEBUG_
+//#define _DEBUG_
 
 #define SSID     "FONSIforEVER"
 #define PASWD    "758-DRa47uK82ohneEnde" // well, i figured... i dont care
@@ -132,7 +132,7 @@ void Comms::getWifiMsg(){
     digitalWrite(LED_BUILTIN, HIGH);       
 	memory.setCommsWebMsg(&buffer[0]);		
   }else{
-	  memory.comms.COMMS_WEB_CYCLE_SINCE_MSG++;
+	memory.comms.COMMS_WEB_CYCLE_SINCE_MSG++;  
   }
 }
 
@@ -144,11 +144,11 @@ void Comms::runWebInterface() {
   if (wifi_msg_length > 0){
 	  memcpy(msgBuffer, memory.getCommsWebMsg(), sizeof(msgBuffer));
 	  #ifdef _DEBUG_
-		  Serial.println("msgbuffer: [");
-		  for(uint8_t i = 0; i < 16; i++) {
-			Serial.print((char)msgBuffer[i]);
-		  }
-		  Serial.print("]\r\n");
+		  // Serial.println("msgbuffer: [");
+		  // for(uint8_t i = 0; i < 16; i++) {
+			// Serial.print((char)msgBuffer[i]);
+		  // }
+		  // Serial.print("]\r\n");
 	  #endif
 	  // find string in message 		  
 	  if (strstr (msgBuffer, "/?") != -1){
@@ -173,6 +173,7 @@ void Comms::runWebInterface() {
 		// save data to SharedMemory
 		memory.setCommsWebCommand(&cmdBuffer[0]);
 		memory.setCommsWebValue(&valBuffer[0]);
+		// --------- set Axis
 		if (strcmp(cmdBuffer, "sr1") == 0) {
 		  memory.setAxisRotateAngle(value); 
 		  digitalWrite(LED_BUILTIN, LOW);
@@ -180,7 +181,17 @@ void Comms::runWebInterface() {
 		if (strcmp(cmdBuffer, "sr2") == 0) {
 		  memory.setAxisPitchAngle(value);
 		  digitalWrite(LED_BUILTIN, LOW);
-		}		
+		}
+		// --------- set Drive
+		if (strcmp(cmdBuffer, "dir") == 0) {
+			memory.comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;
+			if (strcmp(valBuffer, "fwd") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD);
+			if (strcmp(valBuffer, "bck") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_BACK);
+			if (strcmp(valBuffer, "lft") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT);
+			if (strcmp(valBuffer, "rgt") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT);
+			if (strcmp(valBuffer, "stp") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP);		 
+			digitalWrite(LED_BUILTIN, LOW);
+		}
 		
 	  }else if (strstr (msgBuffer, "GET") != -1) {
 	   //generatWebPage(mux_id);

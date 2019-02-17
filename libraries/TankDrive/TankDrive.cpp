@@ -3,30 +3,34 @@
 
 #include <TankDrive.h> 
 
+L298N TankDrive::_motors;
+
 TankDrive::TankDrive(){
 	 _enabled = false;
 }
 
-void TankDrive::enable(int (*pins)[6]){
+void TankDrive::enable(int (*pins)[7]){
 	 _motors.enable(pins);	 
 	 _enabled = true;
 }
 
-void TankDrive::forward(){ 
-    _motors.setLeftMotor(1, 1, MOTOR_SPEED);
-	_motors.setRightMotor(1, 1, MOTOR_SPEED);
+void TankDrive::forward(){
+	_motors.enable();	
+	_motors.setLeftMotor(1, 0, MOTOR_SPEED);
+	_motors.setRightMotor(1, 0, MOTOR_SPEED);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD);
-  //Serial.println("Forward");
 }
 
 void TankDrive::back() {
-    _motors.setLeftMotor(1, 0, MOTOR_SPEED);
-	_motors.setRightMotor(1, 0, MOTOR_SPEED);
+	_motors.enable();
+    _motors.setLeftMotor(1, 1, MOTOR_SPEED);
+	_motors.setRightMotor(1, 1, MOTOR_SPEED);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_BACK);
   //Serial.println("Back");
 }
 
 void TankDrive::left() {
+	_motors.enable();
     _motors.setLeftMotor(1, 0, MOTOR_SPEED);
 	_motors.setRightMotor(1, 1, MOTOR_SPEED);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT);
@@ -34,6 +38,7 @@ void TankDrive::left() {
 }
 
 void TankDrive::right() {
+	_motors.enable();
     _motors.setLeftMotor(1, 1, MOTOR_SPEED);
 	_motors.setRightMotor(1, 0, MOTOR_SPEED);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT);
@@ -47,7 +52,11 @@ void TankDrive::stop() {
   //Serial.println("Stop!");
 } 
 
-void TankDrive::setDirection(uint8_t direction){ 
+void TankDrive::disable() {
+	_motors.disable();
+} 
+
+void TankDrive::setDirection(uint8_t direction){     
     switch(direction){
 		case TANKDRIVE_DIRECTION_STOP: stop(); break;
 		case TANKDRIVE_DIRECTION_FORWARD: forward(); break;

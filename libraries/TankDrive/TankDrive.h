@@ -18,23 +18,24 @@
 #include <Memory.h>
 #include <L298N.h> 
 
-#define MOTOR_SPEED 200  // between 0 (always off) and 255 (always on)
+#define MOTOR_SPEED 128  // between 0 (always off) and 255 (always on)
 
 class TankDrive {
      
   public:
     bool _enabled;
     TankDrive();
-	void enable(int (*pins)[6]);
+	static L298N _motors;
+	void enable(int (*pins)[7]);
     void forward();	
     void back();
     void left();
     void right();
 	void stop();
+	void disable();
 	void setDirection(uint8_t direction);	
 	
   private:
 	Memory memory;
-	L298N _motors;
 };
 #endif

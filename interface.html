@@ -1,0 +1,144 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>hinata WebInterface</title>
+<script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
+<style>
+*{
+margin : 0;
+padding : 0;
+}
+body {
+height: 100vh;
+background-color: #000;
+font-family: 'Roboto',sans-serif;
+color: #fff;
+}
+.container{
+max-width: 400px;
+margin:5 auto 5;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+}
+.box-minmax{
+margin-top: 1px;
+width: 308px;
+display: flex;
+justify-content: space-between;
+font-size: 16px;
+color: #FFFFFF;
+span:first-child{
+margin-left: 10px;
+}
+}
+.rs-range {
+margin-top: 5px;
+width: 300px;
+height: 20px;
+background-color: transparent;
+box-sizing: border-box;
+line-height: 1;
+border-bottom: 2px solid white;
+-webkit-appearance: none;
+}
+::-moz-range-thumb {
+box-shadow: none;
+border: 0px solid #ffffff;
+box-shadow: 0px 10px 10px rgba(0,0,0,0.25);
+height: 26px;
+width: 12px;
+border-radius: 22px;
+background: white;
+cursor: pointer;
+-webkit-appearance: none;
+}
+::-webkit-slider-thumb {
+box-shadow: none;
+border: 0px solid #ffffff;
+box-shadow: 0px 10px 10px rgba(0,0,0,0.25);
+height: 26px;
+width: 12px;
+border-radius: 22px;
+background: white;
+cursor: pointer;
+-webkit-appearance: none;
+}
+.rs-label {
+position: relative;
+transform-origin: center center;
+display: block;
+width: 48px;
+height: 48px;
+background: transparent;
+border-radius: 50%;
+line-height: 30px;
+text-align: center;
+font-weight: bold;
+padding-top: 12px;
+box-sizing: border-box;
+border: 2px solid #fff;
+margin-top: 5px;
+margin-left: -14px;
+left: attr(value);
+color: #fff;
+font-style: normal;
+font-weight: normal;
+line-height: normal;
+font-size: 20px;  
+}
+</style>
+</head>
+<body><div style="width:800px; margin:0 auto;">
+<div class="container">
+<h1><b>project hinata</b></h1>
+<form name="form">
+IP Address:
+<input type="text" name="inputbox_IP" value="192.168.2.105">
+</form>
+</div>
+<div class="container">
+<h4><b>Servo 1</b></h4>
+ <div class="slider_value">
+  <span id="bullet_sr1" class="rs-label">0</span>
+  <input id="input_sr1" class="rs-range" type="range" min="0" max="180" value="90" onmouseup="servo(this.value, 'sr1')" oninput="showSliderValue('sr1')">
+ </div>
+ <div class="box-minmax">
+  <span>0</span><span>180</span>
+ </div>
+</div>
+<div class="container">
+<h4><b>Servo 2</b></h4>
+ <div class="slider_value">
+  <span id="bullet_sr2" class="rs-label">0</span>
+  <input id="input_sr2" class="rs-range" type="range" min="0" max="180" value="90" onmouseup="servo(this.value, 'sr2')" oninput="showSliderValue('sr2')">
+ </div>
+ <div class="box-minmax">
+  <span>0</span><span>180</span>
+ </div>
+</div>
+</div>
+<script>
+$.ajaxSetup({timeout:500});
+function servo(angle, cmd){	
+	TextVar = form.inputbox_IP.value;
+	ArduinoVar = "http://" + TextVar + ":80";
+	$.get( ArduinoVar, cmd+"="+angle)	;
+	{Connection: close};
+}
+function showSliderValue(cmd) {
+ var rBull = document.getElementById("bullet_"+cmd);
+ var rSlid = document.getElementById("input_"+cmd);
+ rBull.innerHTML = rSlid.value;
+ rBull.style.left = ((rSlid.value/180) * 278) + "px";
+}
+function setSliderValue(angle, cmd) {
+ var rBull = document.getElementById("bullet_"+cmd);
+ var rSlid = document.getElementById("input_"+cmd);
+ rBull.innerHTML = angle;
+ rBull.style.left = ((angle/180) * 278) + "px";
+ rSlid.value = angle;
+}
+$(setSliderValue("90", 'sr1'));
+$(setSliderValue("90", 'sr2'));
+</script>
+</body></html>

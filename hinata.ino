@@ -17,6 +17,7 @@
      by Martin Rasche
 *                                                                *
 \****************************************************************/
+#include <math.h>
 
 #include <AxisArm.h>
 #include <Comms.h>
@@ -25,44 +26,56 @@
 #include <TankDrive.h>
 #include <TaskScheduler.h>
 
-// keep in mind
-// The Arduino Mega has three additional serial ports: 
-// Serial1 on pins 19 (RX) and 18 (TX),  <- used for wifi, 9600 baud
-// Serial2 on pins 17 (RX) and 16 (TX), 
-// Serial3 on pins 15 (RX) and 14 (TX).  
+
+
+
 // https://www.arduino.cc/en/Hacking/PinMapping2560
+
+#define DRIVE_SPEED 150 // 0..255
 
 #define ENA                 5   // PWM Motor controls
 #define ENB                 4   // PWM Motor controls
-#define PWR_L298           33  // enable motor controller
+// on the Mega LED_BUILTIN is PIN D13
+
+// Serial3 on pins 15 (RX) and 14 (TX).  <- used for wifi, 115200 baud
+// Serial2 on pins 17 (RX) and 16 (TX), 
+// Serial1 on pins 19 (RX) and 18 (TX),  <- used for interrrupt
+#define SEONSOR_ODOMETRY_LEFT_PIN   18 // interrupt 5
+#define SEONSOR_ODOMETRY_RIGHT_PIN  19 // interrupt 4
+#define OLED_RESET 20 
+#define PWR_L298            33  // enable motor controller
 #define IN1                 34   // Motor 1
 #define IN2                 35   // Motor 1
 #define IN3                 36   // Motor 2
 #define IN4                 37   // Motor 2
 int L298Npins[7] = {IN1, IN2, IN3, IN4, ENA, ENB, PWR_L298};
-// on the Mega LED_BUILTIN is PIN D13 
-#define OLED_RESET 20 
 #define PIN_AXISARM_ROTATE    45   // Servo 1 - 84 deg mid
 #define PIN_AXISARM_PITCH     44   // Servo 2 - 82 deg mid
 #define SEONSOR_VOLTAGE_PIN  A11
 
+// Interrupt methods prototypes
+void Drive_Odo_Left_Interrupt(); 
+void Drive_Odo_Right_Interrupt();
 
 // Callback methods prototypes
+void PRINT_DEBUG_Callback(); 
 void AxisArm_setAxis_Callback();
 void TankDrive_Drive_Callback(); 
 void Display_Draw_Callback();
 void Comms_RunWebInterfaceCallback(); 
 void Measure_Sensor_Voltage_Callback(); 
 void Measure_Sensor_Voltage_Callback_2(); 
-void TankDrive_Drive_Callback(); 
+void TankDrive_Drive_Direction_Callback(); 
 void TankDrive_Stop_Callback(); 
 
 // Tasks
-Task tAxisArm_setAxis (500, TASK_FOREVER, &AxisArm_setAxis_Callback);  
-Task tTankDrive_Drive (80, TASK_FOREVER, &TankDrive_Drive_Callback);  
-Task tDisplay_Draw (40, TASK_FOREVER, &Display_Draw_Callback); 
+Task tPRINT_DEBUG (10000, TASK_FOREVER, &PRINT_DEBUG_Callback); 
+Task tAxisArm_setAxis (160, TASK_FOREVER, &AxisArm_setAxis_Callback);  
+Task tTankDrive_Drive_Direction (80, TASK_FOREVER, &TankDrive_Drive_Direction_Callback);  
+Task tDisplay_Draw (80, TASK_FOREVER, &Display_Draw_Callback); 
 Task tComms_RunWebInterface(20, TASK_FOREVER, &Comms_RunWebInterfaceCallback);
 Task tMeasure_Sensor_Voltage (9000, TASK_FOREVER, &Measure_Sensor_Voltage_Callback); 
+
 
 
 AxisArm axisArm;
@@ -77,17 +90,24 @@ void setup(void)
 {
   pinMode(LED_BUILTIN, OUTPUT);  
   
+  //pinMode(SEONSOR_ODOMETRY_LEFT_PIN, INPUT_PULLUP); 
+  //pinMode(SEONSOR_ODOMETRY_RIGHT_PIN, INPUT_PULLUP); 
+  attachInterrupt(digitalPinToInterrupt(SEONSOR_ODOMETRY_LEFT_PIN), Drive_Odo_Left_Interrupt, RISING );
+  attachInterrupt(digitalPinToInterrupt(SEONSOR_ODOMETRY_RIGHT_PIN), Drive_Odo_Right_Interrupt, RISING );
+  
   Serial.begin(9600);
   comms.print("setup begin\r\n");
-
+  
   //scheduler.init();
+  scheduler.addTask(tPRINT_DEBUG);
   scheduler.addTask(tAxisArm_setAxis);
-  scheduler.addTask(tTankDrive_Drive);
+  scheduler.addTask(tTankDrive_Drive_Direction);
   scheduler.addTask(tDisplay_Draw);
   scheduler.addTask(tComms_RunWebInterface);
   scheduler.addTask(tMeasure_Sensor_Voltage);
+  tPRINT_DEBUG.enable();  
   tAxisArm_setAxis.enable();  
-  tTankDrive_Drive.enableDelayed(500);
+  tTankDrive_Drive_Direction.enableDelayed(500);
   tDisplay_Draw.enableDelayed(1500); 
   tComms_RunWebInterface.enableDelayed(1000);
   tMeasure_Sensor_Voltage.enableDelayed(500);
@@ -100,31 +120,77 @@ void setup(void)
 // -------------------- LOOP ------------------
 void loop(void)
 {
-
-  scheduler.execute();
   
+  scheduler.execute();
 
+}
+// ------------------ INTERRUPTS -------------
+void Drive_Odo_Left_Interrupt() {  
+  memory.drive.LEFT_TICKS++;
+}
+void Drive_Odo_Right_Interrupt() {  
+   memory.drive.RIGHT_TICKS++;
 }
 
 // ------------------ CALLBACKS ---------------
+// ------------------ PRINT_DEBUG
+void PRINT_DEBUG_Callback() {  
+  Serial.print("\nmemory.drive.LEFT_TICKS:  ");
+  Serial.print(memory.drive.LEFT_TICKS);
+  Serial.print(" memory.drive.RIGHT_TICKS: ");  
+  Serial.print(memory.drive.RIGHT_TICKS);  
+  Serial.println();
+  Serial.print("memory.drive.MOTOR_SPEED_L: ");
+  Serial.print(memory.drive.MOTOR_SPEED_L);
+  Serial.print(" memory.drive.MOTOR_SPEED_R: ");
+  Serial.print(memory.drive.MOTOR_SPEED_R);
+  Serial.print("\n");
+}
 // ------------------ AxisArm
 void AxisArm_setAxis_Callback() {  
   if (!axisArm._enabled){
     axisArm.enable(PIN_AXISARM_ROTATE, PIN_AXISARM_PITCH);
   }else{
-    axisArm.setAxis(0, memory.getAxisRotateAngle(), 20);
-    axisArm.setAxis(1, memory.getAxisPitchAngle(), 20);
-  }
+    if(memory.axis.AXIS_ROTATE){
+      axisArm.setAxis(0, memory.getAxisRotateAngle(), 15);
+    }else{
+      axisArm.stop(0);
+    }
+    if(memory.axis.AXIS_PITCH){
+      axisArm.setAxis(1, memory.getAxisPitchAngle(), 15);
+    }else{      
+      axisArm.stop(1);
+    }    
+  }  
 }
+
+
 // ------------------ TankDrive
-void TankDrive_Drive_Callback() {  
+void TankDrive_Drive_Direction_Callback() {  
   if (!drive._enabled){
     drive.enable(&L298Npins);
   }else{    
+
+    // -----------   adjust right motor speed by odometry    
+    if(memory.drive.LEFT_TICKS > 100 || memory.drive.RIGHT_TICKS > 100){
+      if (abs(memory.drive.LEFT_TICKS - memory.drive.RIGHT_TICKS) > 5){
+        if (memory.drive.LEFT_TICKS > memory.drive.RIGHT_TICKS){
+          memory.drive.MOTOR_SPEED_R += 5;
+        }else{
+          memory.drive.MOTOR_SPEED_R -= 5;
+        }
+      }
+      noInterrupts();
+      memory.drive.LEFT_TICKS = 0;
+      memory.drive.RIGHT_TICKS = 0;
+      interrupts();
+    }
+    // ----------- \ adjust speed by odometry
+    
     drive.setDirection(memory.getDriveDirection());
     if(memory.comms.COMMS_WEB_CYCLE_SINCE_MSG > 50){
-      tTankDrive_Drive.set(TASK_IMMEDIATE, TASK_FOREVER, &TankDrive_Stop_Callback);
-      tTankDrive_Drive.delay(200);
+      tTankDrive_Drive_Direction.set(TASK_IMMEDIATE, TASK_FOREVER, &TankDrive_Stop_Callback);
+      tTankDrive_Drive_Direction.delay(200);
     }
   }
 }
@@ -133,7 +199,7 @@ void TankDrive_Stop_Callback() {
     drive.enable(&L298Npins);
   }else{      
     drive.disable();
-    tTankDrive_Drive.set(80, TASK_FOREVER, &TankDrive_Drive_Callback);
+    tTankDrive_Drive_Direction.set(80, TASK_FOREVER, &TankDrive_Drive_Direction_Callback);
   }
 }
 

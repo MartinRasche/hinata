@@ -167,20 +167,24 @@ function reportOnGamepad() {
 
 	for(var i=0;i<gp.axes.length; i+=2) {
 		html+= "Stick "+(Math.ceil(i/2)+1)+": "+gp.axes[i]+","+gp.axes[i+1]+"<br/>";
-		if (i == 0){
-			if( gp.axes[1] < -0.85){
-				sendCmd('dir', 'fwd');
-			}else if( gp.axes[1] > 0.85){
-				sendCmd('dir', 'bck');
-			}else if( gp.axes[0] > 0.85){
-				sendCmd('dir', 'lft');
-			}else if( gp.axes[0] < -0.85){
-				sendCmd('dir', 'rgt');
-			}else{
-				sendCmd('dir', 'stp');
-			}
-		}
+		
+		
 	}
+	
+	if( gp.axes[0] < -0.4 || gp.axes[0] > 0.4 ){
+		sendCmd('s1h', gp.axes[0]);
+	}else if( gp.axes[1] < -0.4 || gp.axes[1] > 0.4 ){
+		sendCmd('s1v', gp.axes[1]);
+	}
+	
+	if( gp.axes[2] < -0.4 || gp.axes[2] > 0.4 ){
+		sendCmd('s2v', gp.axes[2]);
+	}else if( gp.axes[3] < -0.4 || gp.axes[3] > 0.4 ){
+		sendCmd('s2h', gp.axes[3]);
+	}
+	
+	
+		
 
 	$("#gamepadDisplay").html(html);
 } 

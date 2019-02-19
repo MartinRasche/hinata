@@ -10,9 +10,15 @@ disp_m Memory::disp;
 sensor_m Memory::sensor;
 
 Memory::Memory(){	
+    axis.AXIS_ROTATE = false;
 	axis.AXIS_ROTATE_ANGLE = 90;
+	axis.AXIS_PITCH = false;
 	axis.AXIS_PITCH_ANGLE = 90;
 	drive.DIRECTION = TANKDRIVE_DIRECTION_STOP;
+	drive.LEFT_TICKS = 0;
+	drive.RIGHT_TICKS = 0;
+	drive.MOTOR_SPEED_L = 150;   
+    drive.MOTOR_SPEED_R = 120;
 	comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;
 	memset(comms.COMMS_WEB_MSG, 0, sizeof(comms.COMMS_WEB_MSG));
 	memset(comms.COMMS_WEB_COMMAND, 0, sizeof(comms.COMMS_WEB_COMMAND));

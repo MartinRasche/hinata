@@ -40,7 +40,7 @@ void L298N::disable(){
 	}
 }
 
-void L298N::setLeftMotor(bool enable, bool direction, int speed){ 
+void L298N::setLeftMotor(bool enable, bool direction, uint8_t speed){ 
    if(_enabled){
 	  if(enable){
 		analogWrite(_ENB, speed);
@@ -50,11 +50,11 @@ void L298N::setLeftMotor(bool enable, bool direction, int speed){
 		 digitalWrite(_ENB, LOW); 
 	  }	 
    }else{
-	  Serial.println("L298N is disabled"); 
+	  // Serial.println("L298N is disabled"); 
    }
 }
 
-void L298N::setRightMotor(bool enable, bool direction, int speed){
+void L298N::setRightMotor(bool enable, bool direction, uint8_t speed){
 	if(_enabled){
 	   if(enable){	
 		analogWrite(_ENA, speed);
@@ -64,7 +64,7 @@ void L298N::setRightMotor(bool enable, bool direction, int speed){
 		digitalWrite(_ENA, LOW); 
 	  }
    }else{
-	  Serial.println("L298N is disabled"); 
+	  // Serial.println("L298N is disabled"); 
    } 
 }
 

@@ -18,7 +18,7 @@
 #include <Memory.h>
 #include <L298N.h> 
 
-#define MOTOR_SPEED 128  // between 0 (always off) and 255 (always on)
+
 
 class TankDrive {
      

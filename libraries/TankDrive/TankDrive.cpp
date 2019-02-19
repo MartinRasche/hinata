@@ -16,31 +16,31 @@ void TankDrive::enable(int (*pins)[7]){
 
 void TankDrive::forward(){
 	_motors.enable();	
-	_motors.setLeftMotor(1, 0, MOTOR_SPEED);
-	_motors.setRightMotor(1, 0, MOTOR_SPEED);
+	_motors.setLeftMotor(1, 0, memory.drive.MOTOR_SPEED_L);
+	_motors.setRightMotor(1, 0, memory.drive.MOTOR_SPEED_R);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD);
 }
 
 void TankDrive::back() {
 	_motors.enable();
-    _motors.setLeftMotor(1, 1, MOTOR_SPEED);
-	_motors.setRightMotor(1, 1, MOTOR_SPEED);
+    _motors.setLeftMotor(1, 1, memory.drive.MOTOR_SPEED_L);
+	_motors.setRightMotor(1, 1, memory.drive.MOTOR_SPEED_R);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_BACK);
   //Serial.println("Back");
 }
 
 void TankDrive::left() {
 	_motors.enable();
-    _motors.setLeftMotor(1, 0, MOTOR_SPEED);
-	_motors.setRightMotor(1, 1, MOTOR_SPEED);
+    _motors.setLeftMotor(1, 0, memory.drive.MOTOR_SPEED_L);
+	_motors.setRightMotor(1, 1, memory.drive.MOTOR_SPEED_R);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT);
   //Serial.println("Left");
 }
 
 void TankDrive::right() {
 	_motors.enable();
-    _motors.setLeftMotor(1, 1, MOTOR_SPEED);
-	_motors.setRightMotor(1, 0, MOTOR_SPEED);
+    _motors.setLeftMotor(1, 1, memory.drive.MOTOR_SPEED_L);
+	_motors.setRightMotor(1, 0, memory.drive.MOTOR_SPEED_R);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT);
   //Serial.println("Right");
 }

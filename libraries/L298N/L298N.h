@@ -23,8 +23,8 @@ class L298N {
 	void enable(int(*pins)[7]);
 	void enable();
 	void disable();
-    void setLeftMotor(bool enable, bool direction, int speed);	
-    void setRightMotor(bool enable, bool direction, int speed);
+    void setLeftMotor(bool enable, bool direction, uint8_t speed);	
+    void setRightMotor(bool enable, bool direction, uint8_t speed);
   private:
 	bool _enabled;
 	int _IN1;

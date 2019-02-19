@@ -128,8 +128,7 @@ void Comms::getWifiMsg(){
   uint8_t buffer[128] = {0};
   uint8_t mux_id;    
   wifi_msg_length = pt_wifi->recv(&mux_id, buffer, sizeof(buffer), 100);  
-  if (wifi_msg_length > 0) {
-    digitalWrite(LED_BUILTIN, HIGH);       
+  if (wifi_msg_length > 0) {    
 	memory.setCommsWebMsg(&buffer[0]);		
   }else{
 	memory.comms.COMMS_WEB_CYCLE_SINCE_MSG++;  
@@ -139,7 +138,7 @@ void Comms::getWifiMsg(){
 void Comms::runWebInterface() {  
   uint8_t msgBuffer[128] = {0};  
   uint8_t cmdBuffer[4] = {0};
-  uint8_t valBuffer[4] = {0};
+  uint8_t valBuffer[6] = {0};
   getWifiMsg();  
   if (wifi_msg_length > 0){
 	  memcpy(msgBuffer, memory.getCommsWebMsg(), sizeof(msgBuffer));
@@ -153,10 +152,10 @@ void Comms::runWebInterface() {
 	  // find string in message 		  
 	  if (strstr (msgBuffer, "/?") != -1){
 		memcpy(cmdBuffer, msgBuffer + 6 /* Offset */, 3 /* Length */);
-		memcpy(valBuffer, msgBuffer + 10 /* Offset */, 3 /* Length */); 
+		memcpy(valBuffer, msgBuffer + 10 /* Offset */, 5 /* Length */); 
 		
 		cmdBuffer[3]='\0';
-		valBuffer[3]='\0';
+		valBuffer[5]='\0';
 		String s;
 		s = "cmd:";
 		for (int i = 0; i < strlen(cmdBuffer); i++ ){
@@ -176,22 +175,72 @@ void Comms::runWebInterface() {
 		// --------- set Axis
 		if (strcmp(cmdBuffer, "sr1") == 0) {
 		  memory.setAxisRotateAngle(value); 
-		  digitalWrite(LED_BUILTIN, LOW);
 		}
 		if (strcmp(cmdBuffer, "sr2") == 0) {
 		  memory.setAxisPitchAngle(value);
-		  digitalWrite(LED_BUILTIN, LOW);
 		}
-		// --------- set Drive
-		if (strcmp(cmdBuffer, "dir") == 0) {
+		// ---- set Axis - right stick
+		if (strcmp(cmdBuffer, "s2v") == 0) {
+			memory.comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;			
+			if (value > 0.85){ 
+			  memory.axis.AXIS_ROTATE = true;
+			  memory.axis.AXIS_ROTATE_ANGLE = 0;
+			}
+			else if (value < -0.85){ 
+			  memory.axis.AXIS_ROTATE = true;
+			  memory.axis.AXIS_ROTATE_ANGLE = 180;
+			}else{
+			  memory.axis.AXIS_ROTATE = false;
+			}
+			
+		}else if (strcmp(cmdBuffer, "s2h") == 0){
 			memory.comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;
-			if (strcmp(valBuffer, "fwd") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD);
-			if (strcmp(valBuffer, "bck") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_BACK);
-			if (strcmp(valBuffer, "lft") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT);
-			if (strcmp(valBuffer, "rgt") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT);
-			if (strcmp(valBuffer, "stp") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP);		 
-			digitalWrite(LED_BUILTIN, LOW);
+			if (value > 0.85){
+			  memory.axis.AXIS_PITCH = true;					
+			  memory.axis.AXIS_PITCH_ANGLE = 180;
+			  
+			}else if (value < -0.85){ 
+			  memory.axis.AXIS_PITCH = true;
+			  memory.axis.AXIS_PITCH_ANGLE = 0;
+			}else{
+			  memory.axis.AXIS_PITCH = false;				
+			}
+			
 		}
+		
+		// --------- set Drive direction
+		// if (strcmp(cmdBuffer, "dir") == 0) {
+			// memory.comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;
+			// if (strcmp(valBuffer, "fwd") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD);
+			// if (strcmp(valBuffer, "bck") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_BACK);
+			// if (strcmp(valBuffer, "lft") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT);
+			// if (strcmp(valBuffer, "rgt") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT);
+			// if (strcmp(valBuffer, "stp") == 0) memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP);		 
+			// digitalWrite(LED_BUILTIN, LOW);
+		// }
+		
+		// ---- set Drive - left stick
+		if (strcmp(cmdBuffer, "s1h") == 0) {
+			memory.comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;
+			if (value > 0.85){ 
+			  memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD);
+			}else if (value < -0.85){ 
+			  memory.setDriveDirection(TANKDRIVE_DIRECTION_BACK);
+			}else{
+		      memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP);
+			}
+		}else if (strcmp(cmdBuffer, "s1v") == 0){
+			memory.comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;
+			if (value > 0.85){ 
+			  memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT);
+			}else if (value < -0.85){ 
+			  memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT);
+			}else{
+			  memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP);
+			}
+		}
+		
+		
 		
 	  }else if (strstr (msgBuffer, "GET") != -1) {
 	   //generatWebPage(mux_id);

@@ -67,13 +67,13 @@ void Display::drawOLED(){
   pt_display->clearDisplay();
   
   // OLED 1st Line
-  memcpy(&buffer[1], memory.getCommsWebCommand(), 4);
-  memcpy(&buffer[5], memory.getCommsWebValue(), 4);
+  memcpy(&buffer[0], memory.getCommsWebCommand(), 4);
+  memcpy(&buffer[4], memory.getCommsWebValue(), 6);
   for(uint8_t i = 0; i < 10; i++) {
     pt_display->print((char)buffer[i]);
 	//Serial.print((char)buffer[i]);
   }
-  pt_display->setCursor(60, 0);
+  pt_display->setCursor(70, 0);
   pt_display->print(memory.getSensorVoltage());
   pt_display->print("V");
   
@@ -92,7 +92,7 @@ void Display::drawOLED(){
 	//Serial.print((char)buffer[i]);
   }
     
-  pt_display->display();
+  pt_display->display();  
   
 }
 

@@ -6,11 +6,13 @@
 #define AXISARM_h
 
 #include <Arduino.h>
+#include <Memory.h>
 #include <VarSpeedServo.h>   //servo library
 
 class AxisArm{
   
-  public:   
+  public:
+    static VarSpeedServo _servo[2];
     bool _enabled;	
     AxisArm();
 		
@@ -18,10 +20,12 @@ class AxisArm{
 	int getAxis(int axis);
 	void setAxis(int axis, int degree);
 	void setAxis(int axis, int degree, int speed);
+	void stop(int axis);
 	
   private:
+    Memory memory;
     int _pin;
-	  VarSpeedServo _servo[2];
+	  
     
 	
 };

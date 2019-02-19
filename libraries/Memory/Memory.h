@@ -17,11 +17,17 @@
 
 
 struct axis_m{
+  bool AXIS_ROTATE;
   int AXIS_ROTATE_ANGLE;
+  bool AXIS_PITCH;
   int AXIS_PITCH_ANGLE; 
 };
 struct drive_m{
-  uint8_t DIRECTION; 
+  uint8_t DIRECTION;
+  uint16_t LEFT_TICKS;
+  uint16_t RIGHT_TICKS;
+  uint8_t MOTOR_SPEED_L;
+  uint8_t MOTOR_SPEED_R;
 };
 
 struct comms_m{
@@ -29,7 +35,7 @@ struct comms_m{
   String COMMS_WEB_MY_IP;
   uint8_t COMMS_WEB_MSG[128];
   uint8_t COMMS_WEB_COMMAND[4];
-  uint8_t COMMS_WEB_VALUE[4];  
+  uint8_t COMMS_WEB_VALUE[6];  
 };
 struct disp_m{
   uint8_t DISP_MSG[16]; 

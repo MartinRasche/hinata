@@ -73,7 +73,7 @@ Task tPRINT_DEBUG (10000, TASK_FOREVER, &PRINT_DEBUG_Callback);
 Task tAxisArm_setAxis (320, TASK_FOREVER, &AxisArm_setAxis_Callback);  
 Task tTankDrive_Drive_Direction (160, TASK_FOREVER, &TankDrive_Drive_Direction_Callback);  
 Task tDisplay_Draw (240, TASK_FOREVER, &Display_Draw_Callback); 
-Task tComms_RunWebInterface(160, TASK_FOREVER, &Comms_RunWebInterfaceCallback);
+Task tComms_RunWebInterface(80, TASK_FOREVER, &Comms_RunWebInterfaceCallback);
 Task tMeasure_Sensor_Voltage (9000, TASK_FOREVER, &Measure_Sensor_Voltage_Callback); 
 
 

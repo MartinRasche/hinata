@@ -26,6 +26,7 @@ Memory::Memory(){
 	gamepad.s1v = 0;
 	gamepad.s2h = 0;
 	gamepad.s2v = 0;
+	gamepad.btn = 0;
 	memset(comms.COMMS_WEB_MSG, 0, sizeof(comms.COMMS_WEB_MSG));
 	memset(comms.COMMS_WEB_COMMAND, 0, sizeof(comms.COMMS_WEB_COMMAND));
 	memset(comms.COMMS_WEB_VALUE, 0, sizeof(comms.COMMS_WEB_VALUE));

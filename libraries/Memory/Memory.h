@@ -33,7 +33,7 @@ struct drive_m{
 struct comms_m{
   uint32_t last_updated;
   String COMMS_WEB_MY_IP;
-  uint8_t COMMS_WEB_MSG[256];
+  uint8_t COMMS_WEB_MSG[128];
   uint8_t COMMS_WEB_COMMAND[4];
   uint8_t COMMS_WEB_VALUE[6];  
 };
@@ -44,23 +44,7 @@ struct comms_gamepad_m{
   float s1v;
   float s2h;
   float s2v;
-  bool b01;
-  bool b02;
-  bool b03;
-  bool b04;
-  bool b05;
-  bool b06;
-  bool b07;
-  bool b08;
-  bool b09;
-  bool b10;
-  bool b11;
-  bool b12;
-  bool b13;
-  bool b14;
-  bool b15;
-  bool b16;
-  bool b17;  
+  uint16_t btn;  // binary mapping
 };
 
 struct disp_m{

@@ -31,18 +31,19 @@ void TankDrive::back() {
 
 void TankDrive::left() {
 	_motors.enable();
-    _motors.setLeftMotor(1, 0, memory.drive.MOTOR_SPEED_L);
-	_motors.setRightMotor(1, 1, memory.drive.MOTOR_SPEED_R);
+	_motors.setLeftMotor(1, 1, memory.drive.MOTOR_SPEED_L);
+	_motors.setRightMotor(1, 0, memory.drive.MOTOR_SPEED_R);
+
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT);
-  //Serial.println("Left");
+  //Serial.println("Turn Left");
 }
 
 void TankDrive::right() {
 	_motors.enable();
-    _motors.setLeftMotor(1, 1, memory.drive.MOTOR_SPEED_L);
-	_motors.setRightMotor(1, 0, memory.drive.MOTOR_SPEED_R);
+    _motors.setLeftMotor(1, 0, memory.drive.MOTOR_SPEED_L);
+	_motors.setRightMotor(1, 1, memory.drive.MOTOR_SPEED_R);
 	memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT);
-  //Serial.println("Right");
+  //Serial.println("Turn Right");
 }
 
 void TankDrive::stop() {

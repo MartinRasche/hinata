@@ -125,38 +125,163 @@ void Comms::enableWifi() {
 }
 
 void Comms::getWifiMsg(){
-  uint8_t buffer[128] = {0};
+  uint8_t buffer[256] = {0};
   uint8_t mux_id;    
-  wifi_msg_length = pt_wifi->recv(&mux_id, buffer, sizeof(buffer), 100);  
+  wifi_msg_length = pt_wifi->recv(&mux_id, buffer, buffer, 100);  
   if (wifi_msg_length > 0) {    
 	memory.setCommsWebMsg(&buffer[0]);		
   }else{
-	memory.comms.COMMS_WEB_CYCLE_SINCE_MSG++;  
+	memory.comms.last_updated++;  
   }
 }
 
 void Comms::runWebInterface() {  
-  uint8_t msgBuffer[128] = {0};  
+  uint8_t msgBuffer[256] = {0};  
   uint8_t cmdBuffer[4] = {0};
-  uint8_t valBuffer[6] = {0};
+  uint8_t lgtBuffer[4] = {0};
+  uint8_t valBuffer[248] = {0};
   getWifiMsg();  
   if (wifi_msg_length > 0){
 	  memcpy(msgBuffer, memory.getCommsWebMsg(), sizeof(msgBuffer));
 	  #ifdef _DEBUG_
-		  // Serial.println("msgbuffer: [");
-		  // for(uint8_t i = 0; i < 16; i++) {
-			// Serial.print((char)msgBuffer[i]);
-		  // }
-		  // Serial.print("]\r\n");
+		  Serial.println("msgbuffer: [");
+		  for(uint8_t i = 0; i < sizeof(msgBuffer); i++) {
+			Serial.print((char)msgBuffer[i]);
+		  }
+		  Serial.print("]\r\n");
 	  #endif
 	  // find string in message 		  
 	  if (strstr (msgBuffer, "/?") != -1){
 		memcpy(cmdBuffer, msgBuffer + 6 /* Offset */, 3 /* Length */);
-		memcpy(valBuffer, msgBuffer + 10 /* Offset */, 5 /* Length */); 
-		
+		memcpy(lgtBuffer, msgBuffer + 10 /* Offset */, 3 /* Length */);
 		cmdBuffer[3]='\0';
-		valBuffer[5]='\0';
-		String s;
+		lgtBuffer[3]='\0';
+		int msg_length;
+		sscanf(lgtBuffer, "%d", &msg_length); 
+		memcpy(valBuffer, msgBuffer + 14 /* Offset */, msg_length /* Length */); 		
+		valBuffer[msg_length]='\0';
+		
+		#ifdef _DEBUG_
+			Serial.println("valBuffer: [");
+			  for(uint8_t i = 0; i < sizeof(valBuffer); i++) {
+				Serial.print((char)valBuffer[i]);
+			  }
+			  Serial.print("]\r\n");		
+			Serial.println();
+		#endif
+		
+		// Read each command pair 
+		char* command = strtok(valBuffer, ";");
+		memory.comms.last_updated = 0;
+		while (command != 0)
+		{
+			// Split the command in two values
+			char* separator = strchr(command, ':');
+			if (separator != 0)
+			{
+				// Actually split the string in 2: replace ':' with 0
+				*separator = 0;
+				//int Id = atoi(command);
+				
+				if (strcmp(command, "s1h") == 0){++separator;memory.gamepad.s1h = atof(separator);}
+				if (strcmp(command, "s1v") == 0){++separator;memory.gamepad.s1v = atof(separator);}	
+				if (strcmp(command, "s2h") == 0){++separator;memory.gamepad.s2h = atof(separator);}
+				if (strcmp(command, "s2v") == 0){++separator;memory.gamepad.s2v = atof(separator);}	
+				if (strcmp(command, "b01") == 0){++separator;memory.gamepad.b01 = atoi(separator);}
+				if (strcmp(command, "b02") == 0){++separator;memory.gamepad.b02 = atoi(separator);}	
+				if (strcmp(command, "b03") == 0){++separator;memory.gamepad.b03 = atoi(separator);}
+				if (strcmp(command, "b04") == 0){++separator;memory.gamepad.b04 = atoi(separator);}
+				if (strcmp(command, "b05") == 0){++separator;memory.gamepad.b05 = atoi(separator);}
+				if (strcmp(command, "b06") == 0){++separator;memory.gamepad.b06 = atoi(separator);}	
+				if (strcmp(command, "b07") == 0){++separator;memory.gamepad.b07 = atoi(separator);}
+				if (strcmp(command, "b08") == 0){++separator;memory.gamepad.b08 = atoi(separator);}	
+				if (strcmp(command, "b09") == 0){++separator;memory.gamepad.b09 = atoi(separator);}
+				if (strcmp(command, "b10") == 0){++separator;memory.gamepad.b10 = atoi(separator);}	
+				if (strcmp(command, "b11") == 0){++separator;memory.gamepad.b11 = atoi(separator);}
+				if (strcmp(command, "b12") == 0){++separator;memory.gamepad.b12 = atoi(separator);}
+			    if (strcmp(command, "b13") == 0){++separator;memory.gamepad.b13 = atoi(separator);}	
+				if (strcmp(command, "b14") == 0){++separator;memory.gamepad.b14 = atoi(separator);}
+				if (strcmp(command, "b15") == 0){++separator;memory.gamepad.b15 = atoi(separator);}	
+				if (strcmp(command, "b16") == 0){++separator;memory.gamepad.b16 = atoi(separator);}
+				if (strcmp(command, "b17") == 0){++separator;memory.gamepad.b17 = atoi(separator);}
+
+			}
+			// Find the next command in input string
+			command = strtok(0, ";");
+		}
+		Serial.println(command);
+						
+		// ---- set Axis - right stick
+		if (memory.gamepad.s2h > 0.85){
+		  memory.axis.AXIS_ROTATE = true;					
+		  memory.axis.AXIS_ROTATE_ANGLE = 0;
+		  
+		}else if (memory.gamepad.s2h < -0.85){ 
+		  memory.axis.AXIS_ROTATE = true;
+		  memory.axis.AXIS_ROTATE_ANGLE = 180;
+		}else{
+		  memory.axis.AXIS_ROTATE = false;				
+		}
+		
+		if (memory.gamepad.s2v > 0.85){ 
+		  memory.axis.AXIS_PITCH = true;
+		  memory.axis.AXIS_PITCH_ANGLE = 180;
+		}
+		else if (memory.gamepad.s2v < -0.85){ 
+		  memory.axis.AXIS_PITCH = true;
+		  memory.axis.AXIS_PITCH_ANGLE = 0;
+		}else{
+		  memory.axis.AXIS_PITCH = false;
+		}
+		
+		// ---- set Drive - left stick		
+	/* 	if (memory.gamepad.s1h < -0.85){ 
+		  memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT);
+		}else if (memory.gamepad.s1h > 0.85){ 
+		  memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT);
+		}else{
+		  memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP);
+		}
+		
+		if (memory.gamepad.s1v < -0.85){
+		  memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD);		  
+		}else if (memory.gamepad.s1v > 0.85){ 
+		  memory.setDriveDirection(TANKDRIVE_DIRECTION_BACK);
+		}else{
+		  memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP);				
+		} */
+		
+		float directions[4];
+		directions[0] = abs(-1-memory.gamepad.s1v);  // forward
+		directions[1] = abs(1-memory.gamepad.s1v);  // back
+		directions[2] = abs(-1-memory.gamepad.s1h);  // left
+		directions[3] = abs(1-memory.gamepad.s1h);  // right
+		// get closest index to target for each direction		
+		uint8_t index = 4;
+		float targetVal = 0.15;  // we search for the closest value -> 1 - 0.85 = 0.15
+		for(uint8_t i = 0; i < 4; i++)
+		{
+			if(directions[i] < targetVal) {
+				targetVal = directions[i];
+				index = i;
+			}
+		}
+		switch(index){
+			case 0: memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD); break;
+			case 1: memory.setDriveDirection(TANKDRIVE_DIRECTION_BACK); break;
+			case 2: memory.setDriveDirection(TANKDRIVE_DIRECTION_LEFT); break;
+			case 3: memory.setDriveDirection(TANKDRIVE_DIRECTION_RIGHT); break;
+			case 4: memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP); break;
+			default: memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP); break;
+		}
+		
+		Serial.println("\n");
+		for (int i = 0; i < sizeof(directions); i++ ){
+			Serial.println(directions[i]);
+		}
+		Serial.println("\n");
+		
+/* 		String s;
 		s = "cmd:";
 		for (int i = 0; i < strlen(cmdBuffer); i++ ){
 			s += (char)cmdBuffer[i];
@@ -206,7 +331,7 @@ void Comms::runWebInterface() {
 			  memory.axis.AXIS_PITCH = false;				
 			}
 			
-		}
+		} */
 		
 		// --------- set Drive direction
 		// if (strcmp(cmdBuffer, "dir") == 0) {
@@ -220,7 +345,7 @@ void Comms::runWebInterface() {
 		// }
 		
 		// ---- set Drive - left stick
-		if (strcmp(cmdBuffer, "s1h") == 0) {
+	/* 	if (strcmp(cmdBuffer, "s1h") == 0) {
 			memory.comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;
 			if (value > 0.85){ 
 			  memory.setDriveDirection(TANKDRIVE_DIRECTION_FORWARD);
@@ -238,7 +363,7 @@ void Comms::runWebInterface() {
 			}else{
 			  memory.setDriveDirection(TANKDRIVE_DIRECTION_STOP);
 			}
-		}
+		} */
 		
 		
 		

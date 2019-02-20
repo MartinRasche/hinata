@@ -93,7 +93,7 @@ font-size: 20px;
 <h1><b>project hinata</b></h1>
 <form name="form">
 IP Address:
-<input type="text" name="inputbox_IP" value="192.168.2.105">
+<input type="text" name="inputbox_IP" value="192.168.2.106">
 </form>
 </div>
 <div class="container">
@@ -121,10 +121,45 @@ IP Address:
 </div>
 <script>
 $.ajaxSetup({timeout:500});
+
+
+var MSG_dict = { s1h: 0.00,
+				 s1v: 0.00,
+				 s2h: 0.00,
+				 s2v: 0.00,
+				 b01: 0,
+				 b02: 0,
+				 b03: 0,
+				 b04: 0,
+				 b05: 0,
+				 b06: 0,
+				 b07: 0,
+				 b08: 0,
+				 b09: 0,
+				 b10: 0,
+				 b11: 0,
+				 b12: 0,
+				 b13: 0,
+				 b14: 0,
+				 b15: 0,
+				 b16: 0,
+				 b17: 0
+};
+
+
 function sendCmd(cmd, value){	
 	TextVar = form.inputbox_IP.value;
 	ArduinoVar = "http://" + TextVar + ":80";
 	$.get( ArduinoVar, cmd+"="+value)	;
+	{Connection: close};
+}
+function sendMsg(msg){	
+	TextVar = form.inputbox_IP.value;
+	ArduinoVar = "http://" + TextVar + ":80";	
+	var msg_length = msg.length;
+	//console.log(msg);
+	//console.log(msg_length);
+	$.get( ArduinoVar, "msg:"+msg_length+":"+msg);
 	{Connection: close};
 }
 function showSliderValue(cmd) {
@@ -143,6 +178,7 @@ function setSliderValue(angle, cmd) {
 $(setSliderValue("90", 'sr1'));
 $(setSliderValue("90", 'sr2'));
 
+
 var hasGP = false;
 var repGP;
 
@@ -156,37 +192,30 @@ function reportOnGamepad() {
 		html += "id: "+gp.id+"<br/>";
 
 	for(var i=0;i<gp.buttons.length;i++) {
-	    
+	    MSG_dict[Object.keys(MSG_dict)[gp.axes.length + i]] = 0;
 		html+= "Button "+(i+1)+": ";
 		if(gp.buttons[i].pressed){
-			sendCmd('btn', i+1);
+			MSG_dict[Object.keys(MSG_dict)[gp.axes.length + i]] = 1;
 			html+= " pressed";
-		} 
+		}
 		html+= "<br/>";
 	}
 
 	for(var i=0;i<gp.axes.length; i+=2) {
-		html+= "Stick "+(Math.ceil(i/2)+1)+": "+gp.axes[i]+","+gp.axes[i+1]+"<br/>";
-		
+		MSG_dict[Object.keys(MSG_dict)[i]] = Math.floor(gp.axes[i] * 100) / 100;
+		MSG_dict[Object.keys(MSG_dict)[i+1]] = Math.floor(gp.axes[i+1] * 100) / 100;
+		html+= "Stick "+(Math.ceil(i/2)+1)+": "+gp.axes[i]+","+gp.axes[i+1]+"<br/>";	
 		
 	}
-	
-	if( gp.axes[0] < -0.4 || gp.axes[0] > 0.4 ){
-		sendCmd('s1h', gp.axes[0]);
-	}else if( gp.axes[1] < -0.4 || gp.axes[1] > 0.4 ){
-		sendCmd('s1v', gp.axes[1]);
-	}
-	
-	if( gp.axes[2] < -0.4 || gp.axes[2] > 0.4 ){
-		sendCmd('s2v', gp.axes[2]);
-	}else if( gp.axes[3] < -0.4 || gp.axes[3] > 0.4 ){
-		sendCmd('s2h', gp.axes[3]);
-	}
-	
-	
-		
-
 	$("#gamepadDisplay").html(html);
+	// build msg
+	var msg = "";
+	for(var key in MSG_dict) {
+		var value = MSG_dict[key];
+        msg = msg + key + ":" + value + ";";
+   
+	}	
+	sendMsg(msg);
 } 
 
 $(document).ready(function() {	 
@@ -197,7 +226,7 @@ $(document).ready(function() {
 			hasGP = true;
 			$("#gamepadPrompt").html("Gamepad connected!");
 			console.log("connection event");
-			repGP = window.setInterval(reportOnGamepad,100);
+			repGP = window.setInterval(reportOnGamepad,200);
 		});
 
 		$(window).on("gamepaddisconnected", function() {

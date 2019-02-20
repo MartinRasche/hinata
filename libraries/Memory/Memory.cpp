@@ -6,6 +6,7 @@
 axis_m Memory::axis;
 drive_m Memory::drive;
 comms_m Memory::comms;
+comms_gamepad_m Memory::gamepad;
 disp_m Memory::disp;
 sensor_m Memory::sensor;
 
@@ -19,7 +20,12 @@ Memory::Memory(){
 	drive.RIGHT_TICKS = 0;
 	drive.MOTOR_SPEED_L = 150;   
     drive.MOTOR_SPEED_R = 120;
-	comms.COMMS_WEB_CYCLE_SINCE_MSG = 0;
+	comms.last_updated = 0;
+	gamepad.last_updated = 0;
+	gamepad.s1h = 0;
+	gamepad.s1v = 0;
+	gamepad.s2h = 0;
+	gamepad.s2v = 0;
 	memset(comms.COMMS_WEB_MSG, 0, sizeof(comms.COMMS_WEB_MSG));
 	memset(comms.COMMS_WEB_COMMAND, 0, sizeof(comms.COMMS_WEB_COMMAND));
 	memset(comms.COMMS_WEB_VALUE, 0, sizeof(comms.COMMS_WEB_VALUE));

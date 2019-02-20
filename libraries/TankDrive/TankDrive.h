@@ -23,9 +23,9 @@
 class TankDrive {
      
   public:
+    static L298N _motors;
     bool _enabled;
-    TankDrive();
-	static L298N _motors;
+    TankDrive();	
 	void enable(int (*pins)[7]);
     void forward();	
     void back();

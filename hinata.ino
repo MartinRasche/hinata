@@ -39,7 +39,7 @@
 
 // Serial3 on pins 15 (RX) and 14 (TX).  <- used for wifi, 115200 baud
 // Serial2 on pins 17 (RX) and 16 (TX), 
-// Serial1 on pins 19 (RX) and 18 (TX),  <- used for interrrupt
+// Serial1 on pins 19 (RX) and 18 (TX),  <- used for odometry interrrupt
 #define SEONSOR_ODOMETRY_LEFT_PIN   18 // interrupt 5
 #define SEONSOR_ODOMETRY_RIGHT_PIN  19 // interrupt 4
 #define OLED_RESET 20 
@@ -70,10 +70,10 @@ void TankDrive_Stop_Callback();
 
 // Tasks
 Task tPRINT_DEBUG (10000, TASK_FOREVER, &PRINT_DEBUG_Callback); 
-Task tAxisArm_setAxis (160, TASK_FOREVER, &AxisArm_setAxis_Callback);  
-Task tTankDrive_Drive_Direction (80, TASK_FOREVER, &TankDrive_Drive_Direction_Callback);  
-Task tDisplay_Draw (80, TASK_FOREVER, &Display_Draw_Callback); 
-Task tComms_RunWebInterface(20, TASK_FOREVER, &Comms_RunWebInterfaceCallback);
+Task tAxisArm_setAxis (320, TASK_FOREVER, &AxisArm_setAxis_Callback);  
+Task tTankDrive_Drive_Direction (160, TASK_FOREVER, &TankDrive_Drive_Direction_Callback);  
+Task tDisplay_Draw (240, TASK_FOREVER, &Display_Draw_Callback); 
+Task tComms_RunWebInterface(160, TASK_FOREVER, &Comms_RunWebInterfaceCallback);
 Task tMeasure_Sensor_Voltage (9000, TASK_FOREVER, &Measure_Sensor_Voltage_Callback); 
 
 
@@ -144,7 +144,13 @@ void PRINT_DEBUG_Callback() {
   Serial.print(memory.drive.MOTOR_SPEED_L);
   Serial.print(" memory.drive.MOTOR_SPEED_R: ");
   Serial.print(memory.drive.MOTOR_SPEED_R);
-  Serial.print("\n");
+  Serial.println("\n");
+  Serial.println("Gamepad Input:");
+  Serial.print("s1h ");Serial.print(memory.gamepad.s1h);
+  Serial.print("  s1v ");Serial.print(memory.gamepad.s1v);
+  Serial.print("\ns2h ");Serial.print(memory.gamepad.s2h);
+  Serial.print("  s2v ");Serial.print(memory.gamepad.s2v);
+  Serial.println();
 }
 // ------------------ AxisArm
 void AxisArm_setAxis_Callback() {  
@@ -152,12 +158,12 @@ void AxisArm_setAxis_Callback() {
     axisArm.enable(PIN_AXISARM_ROTATE, PIN_AXISARM_PITCH);
   }else{
     if(memory.axis.AXIS_ROTATE){
-      axisArm.setAxis(0, memory.getAxisRotateAngle(), 15);
+      axisArm.setAxis(0, memory.getAxisRotateAngle(), 10);
     }else{
       axisArm.stop(0);
     }
     if(memory.axis.AXIS_PITCH){
-      axisArm.setAxis(1, memory.getAxisPitchAngle(), 15);
+      axisArm.setAxis(1, memory.getAxisPitchAngle(), 10);
     }else{      
       axisArm.stop(1);
     }    
@@ -188,7 +194,7 @@ void TankDrive_Drive_Direction_Callback() {
     // ----------- \ adjust speed by odometry
     
     drive.setDirection(memory.getDriveDirection());
-    if(memory.comms.COMMS_WEB_CYCLE_SINCE_MSG > 50){
+    if(memory.comms.last_updated > 50){
       tTankDrive_Drive_Direction.set(TASK_IMMEDIATE, TASK_FOREVER, &TankDrive_Stop_Callback);
       tTankDrive_Drive_Direction.delay(200);
     }

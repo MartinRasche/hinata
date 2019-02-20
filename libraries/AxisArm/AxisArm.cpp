@@ -39,7 +39,9 @@ void AxisArm::stop(int axis){
 	if (0 <= axis <= 1) {
 		if(axis == 0){
 			memory.axis.AXIS_ROTATE = false;
+			setAxis(axis, getAxis(axis));
 			memory.axis.AXIS_ROTATE_ANGLE = getAxis(0);
+			
 		}
 		if(axis == 1){
 			memory.axis.AXIS_PITCH = false;
@@ -47,5 +49,6 @@ void AxisArm::stop(int axis){
 		}
         
     }
+	setAxis(axis, getAxis(axis));
 }
 
